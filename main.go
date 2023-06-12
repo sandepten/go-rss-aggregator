@@ -27,7 +27,7 @@ func main() {
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
-		MaxAge: 				 300,
+		MaxAge:           300,
 	}))
 
 	v1Router := chi.NewRouter()
@@ -38,7 +38,7 @@ func main() {
 
 	srv := &http.Server{
 		Handler: router,
-		Addr: ":"+port,
+		Addr:    ":" + port,
 	}
 	log.Println("Server is running on port", port)
 	// listen and serve will block the program until it is terminated
