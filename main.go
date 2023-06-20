@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,7 +10,13 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq" // the underscore is to tell the compiler that we are using the package but not directly
+	"github.com/sandepten/go-rss-aggregator/internal/database"
 )
+
+type apiConfig struct {
+	DB *database.Queries
+}
 
 func main() {
 	godotenv.Load() // we can provide the env filename as a parameter but the default is .env
@@ -19,6 +26,22 @@ func main() {
 		log.Fatal("PORT not found in the environment")
 	}
 	fmt.Println(port)
+
+	//? database
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		log.Fatal("DATABASE_URL not found in the environment")
+	}
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("Can't connect to database", err)
+	}
+
+	apiConfig := apiConfig{ // now we can pass this apiConfig to our handlers, so that they can access the database
+		DB: database.New(db),
+	}
+
+	//? router
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
@@ -33,6 +56,7 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlerReadiness)
 	v1Router.Get("/err", handlerError)
+	v1Router.Post("/createUser", apiConfig.handlerCreateUser)
 
 	router.Mount("/v1", v1Router)
 
@@ -42,7 +66,7 @@ func main() {
 	}
 	log.Println("Server is running on port", port)
 	// listen and serve will block the program until it is terminated
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
