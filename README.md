@@ -1,5 +1,3 @@
-Write a readme for this golang rss aggregator project
-
 # Go RSS Aggregator
 
 This is a simple RSS aggregator written in Go. It is a learning project for me to learn Go. It is not meant to be used in production.
