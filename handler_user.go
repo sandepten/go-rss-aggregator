@@ -37,5 +37,21 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, user)
+	respondWithJSON(w, http.StatusCreated, databaseUserToUser(user))
+}
+
+func (apiCfg *apiConfig) handlerGetUserByEmail(w http.ResponseWriter, r *http.Request) {
+	userEmail, contextErr := r.Context().Value("email").(string)
+	if contextErr {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error getting user email from context"))
+		return
+	}
+	fmt.Println(userEmail)
+	user, err := apiCfg.DB.GetUserByEmail(r.Context(), userEmail)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error getting user: %v", err))
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }

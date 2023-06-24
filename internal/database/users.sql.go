@@ -14,9 +14,23 @@ import (
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO
-  users (id, email, password, created_at, updated_at)
+  users (
+    id,
+    email,
+    password,
+    created_at,
+    updated_at,
+    api_key
+  )
 VALUES
-  ($1, $2, $3, $4, $5) RETURNING id, email, password, created_at, updated_at
+  (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    encode(sha256(random() :: text :: bytea), 'hex')
+  ) RETURNING id, email, password, created_at, updated_at, api_key
 `
 
 type CreateUserParams struct {
@@ -42,6 +56,53 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ApiKey,
+	)
+	return i, err
+}
+
+const getUserByAPIKey = `-- name: GetUserByAPIKey :one
+SELECT
+  id, email, password, created_at, updated_at, api_key
+FROM
+  users
+WHERE
+  api_key = $1
+`
+
+func (q *Queries) GetUserByAPIKey(ctx context.Context, apiKey string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByAPIKey, apiKey)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ApiKey,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT
+  id, email, password, created_at, updated_at, api_key
+FROM
+  users
+WHERE
+  email = $1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ApiKey,
 	)
 	return i, err
 }
