@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sandepten/go-rss-aggregator/internal/auth"
 	"github.com/sandepten/go-rss-aggregator/internal/database"
 )
 
@@ -33,7 +34,7 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error creating user: %v", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error creating user: %v", err))
 		return
 	}
 
@@ -43,15 +44,37 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 func (apiCfg *apiConfig) handlerGetUserByEmail(w http.ResponseWriter, r *http.Request) {
 	userEmail, contextErr := r.Context().Value("email").(string)
 	if contextErr {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error getting user email from context"))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error getting user email from context"))
 		return
 	}
-	fmt.Println(userEmail)
 	user, err := apiCfg.DB.GetUserByEmail(r.Context(), userEmail)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Error getting user: %v", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error getting user: %v", err))
 		return
 	}
 
 	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
+}
+
+func (apiCfg *apiConfig) handlerGetUserByAPIKey(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Auth Error: %v", err))
+		return
+	}
+	user, err := apiCfg.DB.GetUserByAPIKey(r.Context(), apiKey)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error getting user: %v", err))
+		return
+	}
+	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
+}
+
+func (apiCfg *apiConfig) handlerGetAllUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := apiCfg.DB.GetAllUsers(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error getting user: %v", err))
+		return
+	}
+	respondWithJSON(w, http.StatusOK, users)
 }

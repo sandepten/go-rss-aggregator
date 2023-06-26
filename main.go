@@ -58,6 +58,8 @@ func main() {
 	v1Router.Get("/err", handlerError)
 	v1Router.Post("/createUser", apiConfig.handlerCreateUser)
 	v1Router.Get("/getUserByEmail", apiConfig.handlerGetUserByEmail)
+	v1Router.Get("/getUserByAPIKey", apiConfig.handlerGetUserByAPIKey)
+	v1Router.Get("/users", apiConfig.handlerGetAllUsers)
 
 	router.Mount("/v1", v1Router)
 
@@ -66,6 +68,7 @@ func main() {
 		Addr:    ":" + port,
 	}
 	log.Println("Server is running on port", port)
+
 	// listen and serve will block the program until it is terminated
 	err = srv.ListenAndServe()
 	if err != nil {
