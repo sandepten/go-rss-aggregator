@@ -59,11 +59,14 @@ func (apiCfg *apiConfig) handlerGetUserByAPIKey(w http.ResponseWriter, r *http.R
 	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }
 
-func (apiCfg *apiConfig) handlerGetAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := apiCfg.DB.GetAllUsers(r.Context())
+func (apiCfg *apiConfig) handlerGetPostsForUser(w http.ResponseWriter, r *http.Request, user database.User) {
+	posts, err := apiCfg.DB.GetPostsForUser(r.Context(), database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit:  20,
+	})
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error getting user: %v", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error getting posts: %v", err))
 		return
 	}
-	respondWithJSON(w, http.StatusOK, users)
+	respondWithJSON(w, http.StatusOK, databasePostsToPosts(posts))
 }

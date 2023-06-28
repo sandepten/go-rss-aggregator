@@ -1,6 +1,6 @@
 # Go RSS Aggregator
 
-This is a simple RSS aggregator written in Go. It is a learning project for me to learn Go. It is not meant to be used in production.
+This is a simple RSS aggregator written in Go. It can be used to aggregate RSS feeds from multiple sources into a single feed.
 
 ## Usage
 

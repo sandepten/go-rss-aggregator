@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -39,6 +40,8 @@ func main() {
 		DB: database.New(db),
 	}
 
+	go startScraping(apiConfig.DB, 10, time.Hour) // we are running this in a goroutine so that it doesn't block the main thread
+
 	//? router
 	router := chi.NewRouter()
 
@@ -59,7 +62,7 @@ func main() {
 	v1Router.Post("/createUser", apiConfig.handlerCreateUser)
 	v1Router.Get("/getUserByEmail", apiConfig.handlerGetUserByEmail)
 	v1Router.Get("/getUserByAPIKey", apiConfig.middlewareAuth(apiConfig.handlerGetUserByAPIKey))
-	v1Router.Get("/users", apiConfig.handlerGetAllUsers)
+	v1Router.Get("/getPosts", apiConfig.middlewareAuth(apiConfig.handlerGetPostsForUser))
 
 	// feed routes
 	v1Router.Post("/addFeed", apiConfig.middlewareAuth(apiConfig.handlerCreateFeed))
