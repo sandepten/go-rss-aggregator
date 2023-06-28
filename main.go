@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -25,7 +24,6 @@ func main() {
 		// log.Fatal will immediately exit the program with code 1 and the message
 		log.Fatal("PORT not found in the environment")
 	}
-	fmt.Println(port)
 
 	//? database
 	dbURL := os.Getenv("DATABASE_URL")
@@ -56,10 +54,21 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlerReadiness)
 	v1Router.Get("/err", handlerError)
+
+	// user routes
 	v1Router.Post("/createUser", apiConfig.handlerCreateUser)
 	v1Router.Get("/getUserByEmail", apiConfig.handlerGetUserByEmail)
-	v1Router.Get("/getUserByAPIKey", apiConfig.handlerGetUserByAPIKey)
+	v1Router.Get("/getUserByAPIKey", apiConfig.middlewareAuth(apiConfig.handlerGetUserByAPIKey))
 	v1Router.Get("/users", apiConfig.handlerGetAllUsers)
+
+	// feed routes
+	v1Router.Post("/addFeed", apiConfig.middlewareAuth(apiConfig.handlerCreateFeed))
+	v1Router.Get("/feeds", apiConfig.handlerGetAllFeeds)
+
+	// feed follow routes
+	v1Router.Post("/feed_follow", apiConfig.middlewareAuth(apiConfig.handlerCreateFeedFollow))
+	v1Router.Get("/feed_follow", apiConfig.middlewareAuth(apiConfig.handlerGetFeedFollows))
+	v1Router.Delete("/feed_follow/{feedFollowId}", apiConfig.middlewareAuth(apiConfig.handlerDeleteFeedFollow))
 
 	router.Mount("/v1", v1Router)
 

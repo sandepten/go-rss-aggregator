@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sandepten/go-rss-aggregator/internal/auth"
 	"github.com/sandepten/go-rss-aggregator/internal/database"
 )
 
@@ -56,17 +55,7 @@ func (apiCfg *apiConfig) handlerGetUserByEmail(w http.ResponseWriter, r *http.Re
 	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }
 
-func (apiCfg *apiConfig) handlerGetUserByAPIKey(w http.ResponseWriter, r *http.Request) {
-	apiKey, err := auth.GetAPIKey(r.Header)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Auth Error: %v", err))
-		return
-	}
-	user, err := apiCfg.DB.GetUserByAPIKey(r.Context(), apiKey)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error getting user: %v", err))
-		return
-	}
+func (apiCfg *apiConfig) handlerGetUserByAPIKey(w http.ResponseWriter, r *http.Request, user database.User) {
 	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }
 
